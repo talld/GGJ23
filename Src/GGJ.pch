@@ -1,0 +1,8 @@
+
+#ifndef GGJ_PCH
+#define GGJ_PCH
+
+#include "stddef.h"
+#include "stdint.h"
+
+#endif //GGJ_PCH

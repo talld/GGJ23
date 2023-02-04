@@ -1,0 +1,31 @@
+project(GGJ)
+
+set(WREN_SRC ${WREN_SRC}
+        Libs/wren/src/optional/wren_opt_meta.c
+        Libs/wren/src/optional/wren_opt_random.c
+        Libs/wren/src/vm/wren_compiler.c
+        Libs/wren/src/vm/wren_core.c
+        Libs/wren/src/vm/wren_debug.c
+        Libs/wren/src/vm/wren_primitive.c
+        Libs/wren/src/vm/wren_utils.c
+        Libs/wren/src/vm/wren_value.c
+        Libs/wren/src/vm/wren_vm.c
+        )
+
+set(WREN_INC ${WREN_INC}
+        Libs/wren/src/include
+        Libs/wren/src/optional
+        Libs/wren/src/vm)
+
+set(GGJ_PCH ${GGJ_PCH}
+        Src/GGJ.pch)
+
+set(GGJ_SRC ${GGJ_SRC}
+        ${GGJ_PCH}
+        Src/main.c
+        Src/display.c)
+
+
+add_executable(GGJ ${GGJ_SRC} ${WREN_SRC})
+target_include_directories(GGJ PUBLIC ${GGJ_INC} PUBLIC ${WREN_INC})
+target_precompile_headers(GGJ PUBLIC ${GGJ_PCH})
