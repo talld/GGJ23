@@ -1,12 +1,14 @@
 #ifndef GGJ23_DISPLAY_H
 #define GGJ23_DISPLAY_H
 
-void Display_RoomTextTick();
+void Display_Update(void);
 
-void Display_SetRoomText(const char* txt);
+void Display_RoomTextTick(void);
+
+void Display_SetRoomText(char const* txt);
 
 void Display_SkipToNextLine();
 
-void Display_AddOption(const char* optText, size_t index);
+void Display_SetOption(char const* optText, size_t index);
 
 #endif //GGJ23_DISPLAY_H

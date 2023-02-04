@@ -18,12 +18,16 @@ set(WREN_INC ${WREN_INC}
         Libs/wren/src/vm)
 
 set(GGJ_PCH ${GGJ_PCH}
-        Src/GGJ.pch)
+        Src/GGJ.pch
+        Src/GGJ.c)
 
 set(GGJ_SRC ${GGJ_SRC}
         ${GGJ_PCH}
         Src/main.c
-        Src/display.c)
+        Src/display.c
+        Src/input.c
+        Src/inventory.c
+        Src/vm.c)
 
 
 add_executable(GGJ ${GGJ_SRC} ${WREN_SRC})
