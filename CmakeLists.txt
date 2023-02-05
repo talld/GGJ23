@@ -35,15 +35,5 @@ set(GGJ_SRC ${GGJ_SRC}
 
 add_executable(GGJ ${GGJ_SRC} ${WREN_SRC})
 
-
-target_link_options(${PROJECT_NAME} PRIVATE
-        -fno-omit-frame-pointer
-
-        -fsanitize=address   -static-libasan
-        -fsanitize=undefined -static-libubsan
-        -fsanitize=leak      -static-liblsan
-        )
-
-
 target_include_directories(GGJ PUBLIC ${GGJ_INC} PUBLIC ${WREN_INC})
 target_precompile_headers(GGJ PUBLIC ${GGJ_PCH})
