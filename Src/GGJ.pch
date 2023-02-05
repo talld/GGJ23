@@ -5,7 +5,7 @@
 #include "stddef.h"
 #include "stdint.h"
 
-static const int kDefaultDisplayTickRate = 1;
+static const int kDefaultDisplayTickRate = 45000;
 static int kDisplayRoomTextHeight = 16;
 
 size_t GetDisplayTickRate();

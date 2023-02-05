@@ -20,16 +20,16 @@ Room.SetOnOption(Fn.new { |index|
 
 	if(index == 0) {
 	Room.SetText(Room.GetText() + "
-	at least you are being paid for this...")
-	
+at least you are being paid for this...")
+
 		Room.SetEncounterReturn("Scripts/warrenEntrance.wren")
 	}
 
 	if(index == 1) {
 		Room.SetText(Room.GetText() + "
-	at last a chance to prove yourself")
+at last a chance to prove yourself")
 
-		Room.SetEncounterReturn("Scripts/warrenEntrance.wren")
+	Room.SetEncounterReturn("Scripts/warrenEntrance.wren")
 	}
 
 	return "Scripts/Continue.wren"

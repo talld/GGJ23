@@ -13,7 +13,7 @@ class Inventory {
 
     foreign static CheckItem(str)
 
-	foreign static AddVar(str, count)
+	foreign static SetVar(str, count)
 
 	foreign static CheckVar(str)
 }

@@ -101,7 +101,7 @@ void Inventory_AddVar(char const* varName, size_t val)
 	}
 
 	sVarNames[varIndex] = varName;
-	sVarCounts[varIndex] += val;
+	sVarCounts[varIndex] = val;
 }
 
 size_t Inventory_CheckVar(char const* varName)

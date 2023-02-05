@@ -122,7 +122,7 @@ WrenForeignMethodFn bindForeignMethodFn(WrenVM* _, const char* module, const cha
 		return VM_CheckItem;
 	}
 
-	if(strcmp(signature,"AddVar(_,_)") == 0)
+	if(strcmp(signature,"SetVar(_,_)") == 0)
 	{
 		return VM_AddItem;
 	}
