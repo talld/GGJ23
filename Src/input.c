@@ -18,7 +18,8 @@ void Input_Process()
 	struct tb_event ev;
 	tb_peek_event(&ev, 1);
 
-	if(Display_GetOptionCount())
+	int optionCount = Display_GetOptionCount();
+	if(optionCount)
 	{
 		if (ev.type == TB_EVENT_KEY)
 		{
@@ -29,7 +30,7 @@ void Input_Process()
 					break;
 
 				case TB_KEY_ARROW_DOWN:
-					if (sSelected < Display_GetOptionCount())
+					if (sSelected < Display_GetOptionCount() - 1)
 						sSelected++;
 					break;
 

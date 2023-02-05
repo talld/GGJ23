@@ -14,7 +14,7 @@ static size_t sRoomStrLineOffset; // total of \n's passed
 static size_t sRoomStrOffset; //  the [index] of the string we've displayed too
 
 static size_t sOptionCount;
-static char const** sOptionTexts;
+static char ** sOptionTexts;
 
 static size_t sOptionsOnScreen;
 static size_t sSelectedIndex;
@@ -121,7 +121,7 @@ void Display_RoomTextTick()
 		size_t len = Display_GetIndexOfFirstNewline(postSkip);
 		char const *postStrip = strndup(postSkip, len);
 
-		tb_print(0, lines - over, 0, 0, postStrip);
+		tb_printf(0, lines - over, 0, 0, "%-80s", postStrip);
 
 		free(postStrip);
 	} while (lines-- > over);
@@ -137,7 +137,7 @@ void Display_RoomTextTick()
 			tb_print(0, kDisplayRoomTextHeight, 0, 0, line);
 
 			int i;
-			for (i = 0; i <= sOptionsOnScreen; i++)
+			for (i = 0; i < sOptionsOnScreen; i++)
 			{
 				int y = kDisplayRoomTextHeight + i + 1;
 				char const *const str = sOptionTexts[i];
@@ -157,7 +157,7 @@ void Display_RoomTextTick()
 				}
 			}
 
-			tb_print(0, kDisplayRoomTextHeight + (sOptionsOnScreen + 1) + 1, 0, 0, line);
+			tb_print(0, kDisplayRoomTextHeight + (sOptionsOnScreen + 1), 0, 0, line);
 
 			if (sOptionsOnScreen < sOptionCount)
 			{
@@ -212,15 +212,18 @@ void Display_SetOption(char const* optText, size_t index)
 {
 	if(index >= sOptionCount)
 	{
-		size_t newEntries = index - sOptionCount;
+		size_t newEntries = index+1 - sOptionCount;
 
-		sOptionCount = index;
-		sOptionTexts = realloc((void*)sOptionTexts, sizeof(char*) * (sOptionCount+1));
+		char** oldPtr = sOptionTexts;
+		char** newPtr = calloc( sizeof(*sOptionTexts), index+1);
 
-		while(newEntries--)
+		size_t	i;
+		for(i = 0; i < sOptionCount; i++)
 		{
-			sOptionTexts[sOptionCount - newEntries] = NULL;
+			newPtr[i] = oldPtr[i];
 		}
+		sOptionCount = index+1;
+		sOptionTexts = newPtr;
 	}
 
 	if(sOptionTexts[index])
@@ -234,7 +237,7 @@ void Display_SetOption(char const* optText, size_t index)
 
 size_t Display_GetOptionCount()
 {
-	return sOptionsOnScreen;
+	return sOptionCount;
 }
 
 size_t Display_SetSelected(size_t i)

@@ -23,7 +23,7 @@ void errFn(WrenVM* vm, WrenErrorType type, const char* module, int line, const c
 
 static void VM_SetTextSpeed(WrenVM* _)
 {
-	size_t speed = wrenGetSlotDouble(_, 1);
+	size_t speed = (size_t)wrenGetSlotDouble(_, 1);
 	if(speed == -1) speed = kDefaultDisplayTickRate;
 
 	SetDisplayTickRate(speed);
@@ -46,7 +46,7 @@ static void VM_SetOption(WrenVM* _)
 static void VM_AddItem(WrenVM* _)
 {
 	char const* name = wrenGetSlotString(_, 1);
-	size_t count = wrenGetSlotDouble(_, 2);
+	int count = (int)wrenGetSlotDouble(_, 2);
 
 	Inventory_AddItem(name, count);
 }
@@ -78,6 +78,13 @@ static void VM_CheckVar(WrenVM* _)
 static void VM_GotoRoom(WrenVM* _)
 {
 	char const* name = wrenGetSlotString(_, 1);
+
+	wrenEnsureSlots(vm, 1);
+	wrenGetVariable(vm, "main", "Room", 0);
+	WrenHandle *roomCall = wrenMakeCallHandle(vm, "OnExit()");
+
+	WrenInterpretResult  res;
+	res = wrenCall(vm, roomCall);
 
 	VM_LoadRoom(name);
 }
@@ -166,8 +173,14 @@ void VM_NotifyOption(size_t index)
 
 	WrenInterpretResult  res;
 	res = wrenCall(vm, roomCall);
-
 	char const* nextRoom = wrenGetSlotString(vm, 0);
+
+	wrenEnsureSlots(vm, 1);
+	wrenGetVariable(vm, "main", "Room", 0);
+	roomCall = wrenMakeCallHandle(vm, "Exit()");
+	res = wrenCall(vm, roomCall);
+
+
 	VM_LoadRoom(nextRoom);
 }
 
@@ -214,7 +227,6 @@ void VM_LoadRoom(char const* name)
 {
 	if(*name == 0) return;
 
-	Display_SetRoomText("");
 	Display_ResetOptions();
 	Input_Reset();
 	int err = VM_LoadScript(name);
@@ -224,6 +236,5 @@ void VM_LoadRoom(char const* name)
 		wrenGetVariable(vm, "main", "Room", 0);
 		WrenHandle *roomCall = wrenMakeCallHandle(vm, "Enter()");
 		wrenCall(vm, roomCall);
-
 	}
 }
