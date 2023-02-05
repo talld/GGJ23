@@ -1,12 +1,14 @@
-class Room {
+Room.SetOnEnter(Fn.new {
+	Room.SetText("this is room1")
+})
 
+Room.SetOnExit(Fn.new {})
 
+Room.SetOnTextDone(Fn.new {})
 
-    static enter() {
-        Display.SetRoomText("this is room1")
-    }
+Room.SetOnOption(Fn.new { |index|
+	// if(index == x) here
 
-    static OptionSelected(i) {
-        //
-    }
-}
+	// return next room to run ( can be self )
+	return "\0"
+})

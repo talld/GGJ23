@@ -1,10 +1,11 @@
 #include "vm.h"
-#include "stdlib.h"
-#include "stdio.h"
-#include "wren.h"
-#include "string.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <wren.h>
 
 #include "display.h"
+#include "input.h"
 #include "inventory.h"
 
 static WrenVM* vm;
@@ -17,12 +18,13 @@ void writeFn(WrenVM* vm, const char* text)
 void errFn(WrenVM* vm, WrenErrorType type, const char* module, int line, const char* message)
 {
 	printf("%s", message);
+	*(int*) NULL = 0;
 }
 
 static void VM_SetTextSpeed(WrenVM* _)
 {
 	size_t speed = wrenGetSlotDouble(_, 1);
-	if(speed == 0) speed = kDefaultDisplayTickRate;
+	if(speed == -1) speed = kDefaultDisplayTickRate;
 
 	SetDisplayTickRate(speed);
 }
@@ -46,13 +48,30 @@ static void VM_AddItem(WrenVM* _)
 	char const* name = wrenGetSlotString(_, 1);
 	size_t count = wrenGetSlotDouble(_, 2);
 
+	Inventory_AddItem(name, count);
 }
 
 static void VM_CheckItem(WrenVM* _)
 {
 	char const* name = wrenGetSlotString(_, 1);
 
-	double count = (double) Inventory_Check(name);
+	double count = (double) Inventory_CheckItem(name);
+	wrenSetSlotDouble(_, 0, count);
+}
+
+static void VM_AddVar(WrenVM* _)
+{
+	char const* name = wrenGetSlotString(_, 1);
+	size_t count = wrenGetSlotDouble(_, 2);
+
+	Inventory_AddVar(name, count);
+}
+
+static void VM_CheckVar(WrenVM* _)
+{
+	char const* name = wrenGetSlotString(_, 1);
+
+	double count = (double) Inventory_CheckVar(name);
 	wrenSetSlotDouble(_, 0, count);
 }
 
@@ -60,7 +79,12 @@ static void VM_GotoRoom(WrenVM* _)
 {
 	char const* name = wrenGetSlotString(_, 1);
 
-	loadRoom(name);
+	VM_LoadRoom(name);
+}
+
+static void VM_Exit(WrenVM* _)
+{
+	exit(0);
 }
 
 WrenForeignMethodFn bindForeignMethodFn(WrenVM* _, const char* module, const char* className, bool isStatic, const char* signature)
@@ -91,9 +115,24 @@ WrenForeignMethodFn bindForeignMethodFn(WrenVM* _, const char* module, const cha
 		return VM_CheckItem;
 	}
 
+	if(strcmp(signature,"AddVar(_,_)") == 0)
+	{
+		return VM_AddItem;
+	}
+
+	if(strcmp(signature,"CheckVar(_)") == 0)
+	{
+		return VM_CheckItem;
+	}
+
 	if(strcmp(signature,"GotoRoom(_)") == 0)
 	{
 		return VM_GotoRoom;
+	}
+
+	if(strcmp(signature,"Exit()") == 0)
+	{
+		return VM_Exit;
 	}
 
 	return NULL;
@@ -116,7 +155,35 @@ void deinitVM(void)
 	atexit(deinitVM);
 }
 
-int loadScript(char const* fname)
+void VM_NotifyOption(size_t index)
+{
+	if(!Display_GetDone()) return;
+
+	wrenEnsureSlots(vm, 2);
+	wrenGetVariable(vm, "main", "Room", 0);
+	wrenSetSlotDouble(vm, 1, (double)index);
+	WrenHandle *roomCall = wrenMakeCallHandle(vm, "OnOption(_)");
+
+	WrenInterpretResult  res;
+	res = wrenCall(vm, roomCall);
+
+	char const* nextRoom = wrenGetSlotString(vm, 0);
+	VM_LoadRoom(nextRoom);
+}
+
+void VM_NotifyDisplayDone()
+{
+	if(!Display_GetDone()) return;
+
+	wrenEnsureSlots(vm, 1);
+	wrenGetVariable(vm, "main", "Room", 0);
+	WrenHandle *roomCall = wrenMakeCallHandle(vm, "OnTextDone()");
+
+	WrenInterpretResult  res;
+	res = wrenCall(vm, roomCall);
+}
+
+int VM_LoadScript(char const* fname)
 {
 	int err = 0;
 
@@ -143,14 +210,19 @@ int loadScript(char const* fname)
 
 }
 
-void loadRoom(char const* name)
+void VM_LoadRoom(char const* name)
 {
-	int err = loadScript(name);
+	if(*name == 0) return;
+
+	Display_SetRoomText("");
+	Display_ResetOptions();
+	Input_Reset();
+	int err = VM_LoadScript(name);
 	if(!err)
 	{
 		wrenEnsureSlots(vm, 1);
 		wrenGetVariable(vm, "main", "Room", 0);
-		WrenHandle *roomCall = wrenMakeCallHandle(vm, "enter()");
+		WrenHandle *roomCall = wrenMakeCallHandle(vm, "Enter()");
 		wrenCall(vm, roomCall);
 
 	}

@@ -8,11 +8,19 @@ class Display {
 }
 
 class Inventory {
+
     foreign static AddItem(str, count)
 
     foreign static CheckItem(str)
+
+	foreign static AddVar(str, count)
+
+	foreign static CheckVar(str)
 }
 
 class Player {
+
     foreign static GotoRoom(roomStr)
+
+    foreign static Exit()
 }

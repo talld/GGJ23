@@ -1,7 +1,7 @@
-#include "display.h"
-#include "sys/time.h"
-#include "stdio.h"
+#include <sys/time.h>
+#include <stdio.h>
 
+#include "display.h"
 #include "input.h"
 #include "vm.h"
 
@@ -9,8 +9,9 @@ int main()
 {
 
 	initVM();
-	loadScript("Scripts/cSide.wren");
-	loadRoom("Scripts/main.wren");
+	VM_LoadScript("Scripts/cSide.wren");
+	VM_LoadScript("Scripts/helpers.wren");
+	VM_LoadRoom("Scripts/main.wren");
 
 	struct timeval start, end;
 	gettimeofday(&start, NULL);
@@ -34,7 +35,7 @@ int main()
 		unprocessedTime =  endUs - startUs;
 		gettimeofday(&start, NULL);
 
-		if(unprocessedDisplayTicks <= GetDisplayTickRate())
+		if(GetDisplayTickRate() && unprocessedDisplayTicks <= GetDisplayTickRate())
 		{
 			unprocessedDisplayTicks += unprocessedTime;
 		}

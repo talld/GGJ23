@@ -2,6 +2,7 @@
 
 #define TB_IMPL 1
 #include "Termbox2/termbox.h"
+#include "vm.h"
 
 static int sHasBeenInited;
 static int sDisplayNeedsUpdate;
@@ -91,70 +92,77 @@ static size_t Display_GetIndexOfFirstNewline(char const* str)
 
 void Display_RoomTextTick()
 {
-
-		char const *preSkip = strndup(sRoomStr, sRoomStrOffset);
-		if(sRoomStrOffset < sRoomStrLen)
-		{
-			sDisplayNeedsUpdate = 1;
-			sRoomStrOffset++;
-		}
-
-		int lines = Display_GetRemainingLines(preSkip);
-		int over = 0;
-
-		if (lines > kDisplayRoomTextHeight)
-		{
-			over = lines - kDisplayRoomTextHeight;
-		}
-
-		do
-		{
-			char const *postSkip = Display_SkipLines(lines, preSkip);
-
-			size_t len = Display_GetIndexOfFirstNewline(postSkip);
-			char const *postStrip = strndup(postSkip, len);
-
-			tb_print(0, lines - over, 0, 0, postStrip);
-
-			free(postStrip);
-		} while (lines-- > over);
-		free(preSkip);
-
-	if(sRoomStrOffset == sRoomStrLen
-	&& sOptionCount)
-
+	char const *preSkip = strndup(sRoomStr, sRoomStrOffset);
+	if (!Display_GetDone())
 	{
-		char const* const line = "--------------------------------------------------------------------------------" ;
-
-		tb_print(0, kDisplayRoomTextHeight + 2, 0, 0, line);
-
-		int i;
-		for(i = 0; i <= sOptionsOnScreen; i++)
-		{
-			int y = kDisplayRoomTextHeight + 2 + i + 1;
-			char const* const str = sOptionTexts[i];
-			uintattr_t fg = 0;
-			uintattr_t bg = 0;
-
-			if( i == sSelectedIndex)
-			{
-				fg = TB_UNDERLINE | TB_BOLD;
-				bg = TB_BLUE;
-			}
-
-			tb_print(0, y, fg, bg, str);
-		}
-
-		tb_print(0, kDisplayRoomTextHeight + 2 + (sOptionsOnScreen+1) + 1, 0, 0, line);
-
-		if(sOptionsOnScreen < sOptionCount)
-		{
-			sOptionsOnScreen++;
-		}
-
 		sDisplayNeedsUpdate = 1;
+		sRoomStrOffset++;
 	}
 
+	int lines = Display_GetRemainingLines(preSkip);
+	int over = 0;
+
+	int area = 24;
+
+	if (sOptionCount)
+	{
+		area = kDisplayRoomTextHeight;
+	}
+
+	if (lines > area)
+	{
+		over = lines - area;
+	}
+
+	do
+	{
+		char const *postSkip = Display_SkipLines(lines, preSkip);
+
+		size_t len = Display_GetIndexOfFirstNewline(postSkip);
+		char const *postStrip = strndup(postSkip, len);
+
+		tb_print(0, lines - over, 0, 0, postStrip);
+
+		free(postStrip);
+	} while (lines-- > over);
+	free(preSkip);
+
+	if(Display_GetDone())
+	{
+		VM_NotifyDisplayDone();
+		if (sOptionCount)
+		{
+			char const *const line = "--------------------------------------------------------------------------------";
+
+			tb_print(0, kDisplayRoomTextHeight, 0, 0, line);
+
+			int i;
+			for (i = 0; i <= sOptionsOnScreen; i++)
+			{
+				int y = kDisplayRoomTextHeight + i + 1;
+				char const *const str = sOptionTexts[i];
+				uintattr_t fg = 0;
+				uintattr_t bg = 0;
+
+				if (i == sSelectedIndex)
+				{
+					fg = TB_UNDERLINE | TB_BOLD;
+					bg = TB_BLUE;
+				}
+
+				tb_print(0, y, fg, bg, str);
+			}
+
+			tb_print(0, kDisplayRoomTextHeight + (sOptionsOnScreen + 1) + 1, 0, 0, line);
+
+			if (sOptionsOnScreen < sOptionCount)
+			{
+				sOptionsOnScreen++;
+			}
+
+			sDisplayNeedsUpdate = 1;
+		}
+	}
 }
 
 void Display_SetRoomText(char const* txt)
@@ -164,10 +172,31 @@ void Display_SetRoomText(char const* txt)
 		Display_Init();
 	}
 
-	sRoomStr = txt;
-	sRoomStrLen = strlen(txt);
 	sRoomStrOffset = 0;
 	sRoomStrLineOffset = 0;
+
+
+
+	if(sRoomStr && sRoomStrLen)
+	{
+		size_t newLen = strlen(txt);
+		size_t min = (sRoomStrLen > newLen)? newLen : sRoomStrLen;
+
+		int i = 0;
+		while (min-- && (txt[sRoomStrOffset]) == (sRoomStr[sRoomStrOffset]) )
+		{
+			sRoomStrOffset++;
+		}
+	}
+
+	sRoomStrLen = strlen(txt);
+	sRoomStr = txt;
+}
+
+int Display_GetDone()
+{
+	int ret = (sRoomStrOffset == sRoomStrLen);
+	return ret;
 }
 
 void Display_SkipToNextLine()
@@ -194,5 +223,18 @@ size_t Display_GetOptionCount()
 
 size_t Display_SetSelected(size_t i)
 {
-	sSelectedIndex = i;
+	if(sSelectedIndex != i)
+	{
+		sSelectedIndex = i;
+		sDisplayNeedsUpdate = 1;
+	}
+}
+
+void Display_ResetOptions()
+{
+	free(sOptionTexts);
+	sOptionTexts = NULL;
+	sOptionCount = 0;
+	sOptionsOnScreen = 0;
+	sSelectedIndex = 0;
 }

@@ -1,4 +1,7 @@
+cmake_minimum_required(VERSION 3.19)
+set(CMAKE_C_STANDARD 99)
 project(GGJ)
+
 
 set(WREN_SRC ${WREN_SRC}
         Libs/wren/src/optional/wren_opt_meta.c
@@ -18,11 +21,11 @@ set(WREN_INC ${WREN_INC}
         Libs/wren/src/vm)
 
 set(GGJ_PCH ${GGJ_PCH}
-        Src/GGJ.pch
-        Src/GGJ.c)
+        Src/GGJ.pch)
 
 set(GGJ_SRC ${GGJ_SRC}
         ${GGJ_PCH}
+        Src/GGJ.c
         Src/main.c
         Src/display.c
         Src/input.c
@@ -31,5 +34,16 @@ set(GGJ_SRC ${GGJ_SRC}
 
 
 add_executable(GGJ ${GGJ_SRC} ${WREN_SRC})
+
+
+target_link_options(${PROJECT_NAME} PRIVATE
+        -fno-omit-frame-pointer
+
+        -fsanitize=address   -static-libasan
+        -fsanitize=undefined -static-libubsan
+        -fsanitize=leak      -static-liblsan
+        )
+
+
 target_include_directories(GGJ PUBLIC ${GGJ_INC} PUBLIC ${WREN_INC})
 target_precompile_headers(GGJ PUBLIC ${GGJ_PCH})
