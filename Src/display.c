@@ -141,16 +141,20 @@ void Display_RoomTextTick()
 			{
 				int y = kDisplayRoomTextHeight + i + 1;
 				char const *const str = sOptionTexts[i];
-				uintattr_t fg = 0;
-				uintattr_t bg = 0;
 
-				if (i == sSelectedIndex)
+				if(str)
 				{
-					fg = TB_UNDERLINE | TB_BOLD;
-					bg = TB_BLUE;
-				}
+					uintattr_t fg = 0;
+					uintattr_t bg = 0;
 
-				tb_print(0, y, fg, bg, str);
+					if (i == sSelectedIndex)
+					{
+						fg = TB_UNDERLINE | TB_BOLD;
+						bg = TB_BLUE;
+					}
+
+					tb_print(0, y, fg, bg, str);
+				}
 			}
 
 			tb_print(0, kDisplayRoomTextHeight + (sOptionsOnScreen + 1) + 1, 0, 0, line);
@@ -208,11 +212,23 @@ void Display_SetOption(char const* optText, size_t index)
 {
 	if(index >= sOptionCount)
 	{
-		sOptionTexts = realloc((void*)sOptionTexts, sizeof(char*) * (sOptionCount+1));
+		size_t newEntries = index - sOptionCount;
+
 		sOptionCount = index;
+		sOptionTexts = realloc((void*)sOptionTexts, sizeof(char*) * (sOptionCount+1));
+
+		while(newEntries--)
+		{
+			sOptionTexts[sOptionCount - newEntries] = NULL;
+		}
 	}
 
-	sOptionTexts[index] = optText;
+	if(sOptionTexts[index])
+	{
+		free((void*)sOptionTexts[index]);
+	}
+
+	sOptionTexts[index] = strdup(optText);
 	sOptionsOnScreen = 0;
 }
 
@@ -232,6 +248,12 @@ size_t Display_SetSelected(size_t i)
 
 void Display_ResetOptions()
 {
+	size_t i;
+	for(i = 0; i < sOptionCount; i++)
+	{
+		free((void*)sOptionTexts[i]);
+	}
+
 	free(sOptionTexts);
 	sOptionTexts = NULL;
 	sOptionCount = 0;
